@@ -3,10 +3,8 @@ import plotly.express as px
 import json
 import numpy as np
 import plotly.graph_objects as go
-import streamlit as st
 from dash import Dash, html, dcc, Input, Output, dash_table, no_update, ctx, State
 
-st.write("Hello")
 
 dataset = pd.read_csv("world_economics.csv")
 dataset.drop(columns=['borders'], inplace=True)
@@ -806,5 +804,11 @@ def update_lollipop(metric, regions, selected_country):
 
 
 
-app.run(jupyter_mode="external", debug=False)
+import os
+
+server = app.server  # <- important for Render/Gunicorn
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8050))
+    app.run_server(host="0.0.0.0", port=port, debug=False)
 
