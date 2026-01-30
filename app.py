@@ -334,6 +334,75 @@ def get_map(data, metric, regions=None, selected_country=None, current_view=None
 
     return fig
 
+def get_spider(data, country_name):
+    # List of metrics for the radar chart
+    radar_metrics = [
+        "GDP",
+        "Inflation Rate",
+        "Unemployment Rate",
+        "Gov Budget",
+        "Debt"
+    ]
+
+    # Use real column names from the dropdown metrics dictionary
+    radar_metrics = list(metrics.values())
+
+    # If there are not enough metrics, return empty figure
+    if len(radar_metrics) < 3:
+        return px.line_polar(title="Not enough metrics for spider chart")
+
+    # Country row
+    row = data[data["name"] == country_name]
+    if row.empty:
+        return px.line_polar(title="Country not found")
+
+    row = row.iloc[0]
+
+    # Extract numeric values
+    values = []
+    for m in radar_metrics:
+        v = pd.to_numeric(row[m], errors="coerce")
+        values.append(v)
+
+    if all(pd.isna(v) for v in values):
+        return px.line_polar(title="No numeric data for this country")
+
+    # Min-max normalization
+    norm_values = []
+    for m, v in zip(radar_metrics, values):
+        col = pd.to_numeric(data[m], errors="coerce")
+        mn = col.min(skipna=True)
+        mx = col.max(skipna=True)
+
+        if pd.isna(v) or pd.isna(mn) or pd.isna(mx) or mx == mn:
+            norm_values.append(0)
+        else:
+            norm_values.append((v - mn) / (mx - mn))
+
+    spider_df = pd.DataFrame({
+        "metric": radar_metrics,
+        "value": norm_values
+    })
+
+    fig = px.line_polar(
+        spider_df,
+        r="value",
+        theta="metric",
+        line_close=True,
+        title=f"Spider Chart — {country_name} (normalized)"
+    )
+
+    fig.update_traces(fill="toself")
+    fig.update_layout(
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font_color="black",
+        margin=dict(t=60, b=20, l=40, r=40)
+    )
+
+    return fig
+
+
 def get_barchart(data, metric, window_start=0, window_size=20, highlight_country=None):
     data = data.copy()
     data[metric] = pd.to_numeric(data[metric], errors="coerce")
