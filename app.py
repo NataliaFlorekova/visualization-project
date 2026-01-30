@@ -3,7 +3,10 @@ import plotly.express as px
 import json
 import numpy as np
 import plotly.graph_objects as go
+import streamlit as st
 from dash import Dash, html, dcc, Input, Output, dash_table, no_update, ctx, State
+
+st.write("Hello")
 
 dataset = pd.read_csv("world_economics.csv")
 dataset.drop(columns=['borders'], inplace=True)
